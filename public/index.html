@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Live Connector Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; }
+        body { background: #0f0f12; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; position: relative; }
+        .container { width: 100%; max-width: 900px; margin-top: 10px; }
+        .card { background: rgba(24, 24, 28, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 25px; backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .tab-bar { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 12px; }
+        .tab-btn { padding: 10px 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #a0a0ab; font-size: 14px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .tab-btn.active { background: linear-gradient(135deg, #fe2c55, #e01e43); color: #fff; border-color: transparent; }
+        .header { display: flex; gap: 12px; align-items: center; margin-bottom: 15px; }
+        .header input { flex: 1; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-size: 15px; outline: none; }
+        .btn-primary { padding: 12px 24px; background: linear-gradient(135deg, #fe2c55, #e01e43); color: #fff; border: none; border-radius: 12px; font-weight: 500; cursor: pointer; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; }
+        @media(max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        .panel { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 20px; height: 350px; display: flex; flex-direction: column; }
+        .panel h3 { font-size: 16px; margin-bottom: 12px; color: #25f4ee; }
+        .feed-box { flex: 1; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 12px; overflow-y: auto; font-size: 13px; display: flex; flex-direction: column; gap: 8px; }
+        .feed-item { padding: 8px 12px; background: rgba(255,255,255,0.04); border-radius: 8px; border-left: 3px solid #fe2c55; }
+        .feed-item span.user { font-weight: 600; color: #25f4ee; margin-right: 6px; }
+        .feed-item span.highlight { color: #fe2c55; font-weight: 600; }
+        .test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 13px; color: #a0a0ab; }
+        .form-group input, .form-group select { padding: 12px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 14px; outline: none; }
+        .form-group select option { background: #1a1a1e; color: #fff; }
+        .btn-test { padding: 12px 18px; background: rgba(37, 244, 238, 0.12); border: 1px solid rgba(37, 244, 238, 0.3); color: #25f4ee; border-radius: 12px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 12px; background: rgba(255,77,77,0.1); color: #ff4d4d; border: 1px solid rgba(255,77,77,0.3); margin-top: 5px; }
+        .status-badge.connected { background: rgba(76,209,55,0.1); color: #4cd137; border-color: rgba(76,209,55,0.3); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <h2><i class="fa-brands fa-tiktok" style="color: #fe2c55;"></i> TikTok Live & Roblox Bridge</h2>
+            <p style="color: #a0a0ab; font-size: 13px; margin-top: 4px; margin-bottom: 20px;">เชื่อมต่อระบบของขวัญ TikTok แปลงเป็น Ability ใน Roblox[cite: 1]</p>
+            
+            <div class="tab-bar">
+                <button class="tab-btn active" onclick="switchTab('live-tab', this)"><i class="fa-solid fa-tower-broadcast"></i> Live Connection</button>
+                <button class="tab-btn" onclick="switchTab('test-tab', this)"><i class="fa-solid fa-vial"></i> Test Mode (Mock Gift)</button>
+            </div>
+
+            <!-- TAB 1: Live Connection -->
+            <div id="live-tab" class="tab-content active">
+                <div class="header">
+                    <input type="text" id="usernameInput" placeholder="ระบุ TikTok Username (เช่น username)">
+                    <button class="btn-primary" onclick="connectLive()"><i class="fa-solid fa-plug"></i> เชื่อมต่อ</button>
+                </div>
+                <div id="connectionStatus" class="status-badge">ยังไม่ได้เชื่อมต่อ</div>
+            </div>
+
+            <!-- TAB 2: Test Mode -->
+            <div id="test-tab" class="tab-content">
+                <div class="test-grid">
+                    <div class="form-group">
+                        <label>ชื่อผู้ใช้งานจำลอง (Test User)</label>
+                        <input type="text" id="testUser" value="RobloxTester">
+                    </div>
+                    <div class="form-group">
+                        <label>ข้อความทดสอบ (Test Comment)</label>
+                        <input type="text" id="testComment" value="ทดสอบระบบสกิล!">
+                    </div>
+                </div>
+
+                <!-- Mock Gift Dropdown โหลดอัตโนมัติจาก GIFT_TO_ABILITY[cite: 1, 3] -->
+                <div class="form-group" style="margin-bottom: 18px;">
+                    <label>Mock Gift (testing)</label>
+                    <select id="mockGiftSelect">
+                        <!-- โหลดข้อมูลผ่าน JavaScript -->
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <button class="btn-test" onclick="sendTestChat()"><i class="fa-solid fa-comment"></i> ส่ง Test Chat</button>
+                    <button class="btn-test" onclick="sendTestGift()"><i class="fa-solid fa-gift"></i> Send mock gift</button>
+                </div>
+                <div class="status-badge connected"><i class="fa-solid fa-vial"></i> โหมดทดสอบพร้อมใช้งาน</div>
+            </div>
+        </div>
+
+        <!-- Dashboard Feeds -->
+        <div class="dashboard-grid">
+            <div class="panel">
+                <h3><i class="fa-solid fa-comments"></i> คอมเมนต์สด (Chat Feed)</h3>
+                <div class="feed-box" id="chatFeed">
+                    <div style="color: #666; text-align: center; margin: auto;">รอข้อมูล...</div>
+                </div>
+            </div>
+            <div class="panel">
+                <h3><i class="fa-solid fa-gift"></i> แปลงของขวัญเป็น Ability (Roblox Bridge)[cite: 1]</h3>
+                <div class="feed-box" id="giftFeed">
+                    <div style="color: #666; text-align: center; margin: auto;">รอข้อมูลของขวัญ...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // โหลดรายชื่อ Gift จาก Backend เข้า Dropdown อัตโนมัติ
+        async function loadGifts() {
+            try {
+                const res = await fetch('/api/chat?gifts=true');
+                const data = await res.json();
+                if (data.success && data.gifts) {
+                    const select = document.getElementById('mockGiftSelect');
+                    select.innerHTML = '';
+                    for (const [gift, ability] of Object.entries(data.gifts)) {
+                        const opt = document.createElement('option');
+                        opt.value = gift;
+                        opt.textContent = `${gift} ➔ [Ability: ${ability}]`;
+                        select.appendChild(opt);
+                    }
+                }
+            } catch (e) {
+                console.error('ไม่สามารถโหลดรายการ Gift ได้');
+            }
+        }
+        loadGifts();
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        async function connectLive() {
+            const username = document.getElementById('usernameInput').value.trim().replace('@', '');
+            const statusBadge = document.getElementById('connectionStatus');
+            if (!username) return alert('กรุณากรอก Username');
+
+            statusBadge.className = 'status-badge';
+            statusBadge.innerHTML = 'กำลังเชื่อมต่อ...';
+
+            try {
+                const res = await fetch(`/api/chat?uniqueId=${username}`);
+                const data = await res.json();
+                if (data.success) {
+                    statusBadge.className = 'status-badge connected';
+                    statusBadge.innerHTML = `เชื่อมต่อสำเร็จกับ @${data.uniqueId} (Room ID: ${data.roomId})`;
+                    appendFeed('chatFeed', 'System', `เชื่อมต่อห้องไลฟ์สดสำเร็จ`);
+                } else {
+                    statusBadge.innerHTML = `เชื่อมต่อไม่สำเร็จ: ${data.error}`;
+                }
+            } catch (err) {
+                statusBadge.innerHTML = 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์';
+            }
+        }
+
+        function sendTestChat() {
+            const user = document.getElementById('testUser').value || 'Tester';
+            const comment = document.getElementById('testComment').value || '';
+            appendFeed('chatFeed', user, comment);
+        }
+
+        function sendTestGift() {
+            const user = document.getElementById('testUser').value || 'Tester';
+            const giftSelect = document.getElementById('mockGiftSelect');
+            const giftName = giftSelect.value;
+            
+            appendFeed('giftFeed', user, `ส่งของขวัญ <span class="highlight">${giftName}</span>`);
+        }
+
+        function appendFeed(feedId, user, message) {
+            const targetFeed = document.getElementById(feedId);
+            if (targetFeed.children.length === 1 && targetFeed.children[0].style.textAlign === 'center') {
+                targetFeed.innerHTML = '';
+            }
+            const item = document.createElement('div');
+            item.className = 'feed-item';
+            item.innerHTML = `<span class="user">${user}:</span> ${message}`;
+            targetFeed.appendChild(item);
+            targetFeed.scrollTop = targetFeed.scrollHeight;
+        }
+    </script>
+</body>
+</html>
